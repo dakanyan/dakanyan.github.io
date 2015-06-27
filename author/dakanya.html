@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>/dev/null - dakanya</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+
+        <!--[if IE]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">/dev/null </a></h1>
+                <nav><ul>
+                </ul>
+                </nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="/arch-linux-networking-script-for-gundam.html">Arch Linux networking script (for Gundam)</a></h1>
+<footer class="post-info">
+        <span>Fri 26 June 2015</span>
+<span>| tags: <a href="/tag/linux.html">linux</a><a href="/tag/gundam.html">gundam</a></span>
+</footer><!-- /.post-info --><p><strong>Introduction</strong></p>
+<p>The biggest problem with trying to set up Gundam EXVS at events is the required internet connection for PSN. At events, the internet connection can be limited and may not work with PS3s out of the box e.g. hotel WiFi that requires browser login or having to tether your cell phone... you can get around these caveats by using a Linux laptop to route your WiFi connection to your Ethernet.</p>
+<p>Here, I have provided a bash script for those who are interested in emulating my networking setup for Gundam and some background information on how one can go about doing this in Arch Linux. Some basic understanding of Linux will be necessary but for those who are unfamiliar with Linux and would like further assistance, please contact me personally.</p>
+<p>Special thanks to Fred 'PhaethonH' Lee for bringing it to my attention that this was possible and for doing this at our first EVO, and the Arch Linux Wiki for providing the <a href="https://wiki.archlinux.org/index.php/Internet_sharing">documentation</a> I needed to make this possible in Arch.</p>
+<p><strong>Software requirements</strong></p>
+<ul>
+<li>Arch Linux</li>
+<li>Packages: iptables, dhcp, wicd</li>
+<li>The networking script (provided below)</li>
+<li>Service file to provide DHCP (provided below)</li>
+</ul>
+<p><strong>Hardware requirements</strong></p>
+<ul>
+<li>Laptop with Ethernet and WiFi</li>
+<li>5-port switch</li>
+</ul>
+<p><strong>Instructions</strong></p>
+<p>Before running the script, connect to the wireless network you intend to use and make sure it works. As long as the internet works on your laptop, then it will work on the PS3s. For example, if the connection requires you to login through the browser, then you'll need to do so so the internet will work. For those uninitiated with Arch Linux, unless you are installing an Arch derivative, there will probably not be a wireless network manager with a GUI already installed. I've listed wicd as a requirement as it's easy to use and it's also what I personally use.</p>
+<p>The script should be run inside a terminal, needs to be run as a superuser, and is setup to take two parameters: the name of the wireless interface and the name of your wired interface.</p>
+<p><strong>Troubleshooting issues</strong></p>
+<p>After everything's been setup, everything should be fine... in a perfect world. If anything goes wrong and suddenly the PS3s are without internet, try restarting the WiFi connection and running the script again.</p>
+<p>Everything's been going great for hours but it feels like there's input lag now... yeah for some reason the games can get laggy over time despite it being blue bar! It doesn't happen to every PS3 at the same time so this can be a little hard to notice and the only way to fix this is to remake the lobby. This takes a while for it to happen, I suggest remaking the lobby every hour or two to ensure optimal playing conditions.</p>
+<p><strong>DHCP service file</strong></p>
+<p>You'll need this to provide DHCP/assign IP addresses to the PS3s. Use the provided filename and filepath.</p>
+<div class="highlight"><pre>#/etc/systemd/system/dhcpd4@.service
+
+[Unit]
+Description=IPv4 DHCP server on %I
+Wants=network.target
+After=network.target
+
+[Service]
+Type=forking
+PIDFile=/run/dhcpd4.pid
+ExecStart=/usr/bin/dhcpd -4 -q -pf /run/dhcpd4.pid %I
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
+</pre></div>
+
+
+<p><strong>The script</strong></p>
+<div class="highlight"><pre><span class="c">#!/bin/bash</span>
+<span class="c">#Example usage: sudo sh gundam wls3 net0</span>
+<span class="nv">wifi</span><span class="o">=</span><span class="nv">$1</span>
+<span class="nv">ethernet</span><span class="o">=</span><span class="nv">$2</span>
+
+trace <span class="o">()</span>
+<span class="o">{</span>
+        <span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;</span><span class="nv">$ethernet</span><span class="s2">&quot;</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+                <span class="nb">printf</span> <span class="s2">&quot;Insufficient parameters! Operation aborted.\n&quot;</span>
+                <span class="nb">printf</span> <span class="s2">&quot;Specify the WiFi interface and the Ethernet interface to run!\n&quot;</span>
+        <span class="k">else</span>
+                <span class="nb">printf</span> <span class="s2">&quot;Parameters accepted! Now routing </span><span class="nv">$wifi</span><span class="s2"> to </span><span class="nv">$ethernet</span><span class="s2">...\n\n&quot;</span>
+                magic
+        <span class="k">fi</span>
+<span class="o">}</span>
+
+magic <span class="o">()</span>
+<span class="o">{</span>
+        <span class="nb">printf</span> <span class="s2">&quot;\nEnabling Ethernet, assigning IPv4 addresses...\n\n&quot;</span>
+        ip link <span class="nb">set </span>up dev <span class="nv">$ethernet</span>
+        ip addr add 192.168.123.100/24 dev <span class="nv">$ethernet</span>
+        ip link
+        ip addr
+
+        <span class="nb">printf</span> <span class="s2">&quot;\nEnabling packet forwarding...\n\n&quot;</span>
+        sysctl net.ipv4.ip_forward<span class="o">=</span>1
+        sysctl -a <span class="p">|</span> egrep <span class="s1">&#39;ipv4.+\.forward&#39;</span>
+
+        <span class="nb">printf</span> <span class="s2">&quot;\nFlushing and resetting iptables...\n\n&quot;</span>
+        iptables -F
+        iptables -X
+        iptables -t nat -F
+        iptables -t nat -X
+        iptables -t mangle -F
+        iptables -t mangle -X
+        iptables -t raw -F
+        iptables -t raw -X
+        iptables -t security -F
+        iptables -t security -X
+        iptables -P INPUT ACCEPT
+        iptables -P FORWARD ACCEPT
+        iptables -P OUTPUT ACCEPT
+        iptables -vnL
+
+        <span class="nb">printf</span> <span class="s2">&quot;\nEnabling NAT...\n\n&quot;</span>
+        iptables -t nat -A POSTROUTING -o <span class="nv">$wifi</span> -j MASQUERADE
+        iptables -A FORWARD -i <span class="nv">$ethernet</span> -o <span class="nv">$wifi</span> -j ACCEPT
+        iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+        iptables -vnL
+
+        <span class="nb">printf</span> <span class="s2">&quot;\nEnabling DHCP...\n\n&quot;</span>
+        systemctl stop dhcpd4@<span class="nv">$ethernet</span>.service
+        systemctl start dhcpd4@<span class="nv">$ethernet</span>.service
+        systemctl status dhcpd4@<span class="nv">$ethernet</span>.service
+
+        <span class="nb">printf</span> <span class="s2">&quot;Execution complete!\n&quot;</span>
+<span class="o">}</span>
+
+trace
+</pre></div>                </article>
+            </aside><!-- /#featured -->
+            </ol><!-- /#posts-list -->
+            </section><!-- /#content -->
+        <section id="extras" class="body">
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <p>Powered by <a href="http://getpelican.com/">Pelican</a>. Theme <a href="https://github.com/blueicefield/pelican-blueidea/">blueidea</a>, inspired by the default theme.</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
