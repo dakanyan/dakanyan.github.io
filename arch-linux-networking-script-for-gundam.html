@@ -47,9 +47,8 @@
 </ul>
 <p><strong>Instructions</strong></p>
 <p>Before running the script, connect to the wireless network you intend to use and make sure it works. As long as the internet works on your laptop, then it will work on the PS3s. For example, if the connection requires you to login through the browser, then you'll need to do so so the internet will work. For those uninitiated with Arch Linux, unless you are installing an Arch derivative, there will probably not be a wireless network manager with a GUI already installed. I've listed wicd as a requirement as it's easy to use and it's also what I personally use.</p>
-<p>The script should be run inside a terminal, needs to be run as a superuser, and is setup to take two parameters: the name of the wireless interface and the name of your wired interface.</p>
 <p><strong>Troubleshooting issues</strong></p>
-<p>After everything's been setup, everything should be fine... in a perfect world. If anything goes wrong and suddenly the PS3s are without internet, try restarting the WiFi connection and running the script again.</p>
+<p>After the network is up and running, everything should be fine... in a perfect world. If anything goes wrong and suddenly the PS3s are without internet, try restarting the WiFi connection and running the script again.</p>
 <p>Everything's been going great for hours but it feels like there's input lag now... yeah for some reason the games can get laggy over time despite it being blue bar! It doesn't happen to every PS3 at the same time so this can be a little hard to notice and the only way to fix this is to remake the lobby. This takes a while for it to happen, I suggest remaking the lobby every hour or two to ensure optimal playing conditions.</p>
 <p><strong>DHCP service file</strong></p>
 <p>You'll need this to provide DHCP/assign IP addresses to the PS3s. Use the provided filename and filepath.</p>
@@ -72,6 +71,8 @@ WantedBy=multi-user.target
 
 
 <p><strong>The script</strong></p>
+<p>Example usage: 'sudo sh gundam wls3 net0' </p>
+<p>The script should be run inside a terminal, needs to be run as a superuser, and requires two parameters: the name of the wireless interface and the name of your wired interface, in that order.</p>
 <div class="highlight"><pre><span class="c">#!/bin/bash</span>
 <span class="c">#Example usage: sudo sh gundam wls3 net0</span>
 <span class="nv">wifi</span><span class="o">=</span><span class="nv">$1</span>
