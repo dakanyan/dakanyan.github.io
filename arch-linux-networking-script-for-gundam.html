@@ -70,6 +70,20 @@ WantedBy=multi-user.target
 </pre></div>
 
 
+<p><strong>DHCP config file</strong></p>
+<p>This declares a subnet for our network along with a few other settings. Use the provided filename and filepath.</p>
+<div class="highlight"><pre>#/etc/dhcpd.conf
+
+# Use Google DNS
+option domain-name-servers 8.8.8.8, 8.8.4.4;
+option subnet-mask 255.255.255.0;
+option routers 192.168.123.100;
+subnet 192.168.123.0 netmask 255.255.255.0 {
+  range 192.168.123.150 192.168.123.200;
+}
+</pre></div>
+
+
 <p><strong>The script</strong></p>
 <p>Example usage: 'sudo sh gundam wls3 net0' </p>
 <p>The script should be run inside a terminal, needs to be run as a superuser, and requires two parameters: the name of the wireless interface and the name of your wired interface, in that order.</p>
@@ -92,9 +106,11 @@ trace <span class="o">()</span>
 magic <span class="o">()</span>
 <span class="o">{</span>
         <span class="nb">printf</span> <span class="s2">&quot;\nEnabling Ethernet, assigning IPv4 addresses...\n\n&quot;</span>
+        ip addr flush dev <span class="nv">$ethernet</span>
+        ip route flush dev <span class="nv">$ethernet</span>
+        ip link <span class="nb">set </span>down dev <span class="nv">$ethernet</span>
         ip link <span class="nb">set </span>up dev <span class="nv">$ethernet</span>
         ip addr add 192.168.123.100/24 dev <span class="nv">$ethernet</span>
-        ip link
         ip addr
 
         <span class="nb">printf</span> <span class="s2">&quot;\nEnabling packet forwarding...\n\n&quot;</span>
