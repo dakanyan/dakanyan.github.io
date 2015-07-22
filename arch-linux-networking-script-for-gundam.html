@@ -71,7 +71,7 @@ WantedBy=multi-user.target
 
 
 <p><strong>DHCP config file</strong></p>
-<p>This declares a subnet for our network along with a few other settings. Use the provided filename and filepath. Make sure you are editing dhcpd.conf, not dhcpcd.conf, and if there are any example settings, erase them.</p>
+<p>This declares a subnet for our network and sets the DNS servers to use Google Public DNS. Use the provided filename and filepath. Make sure you are editing dhcpd.conf, not dhcpcd.conf, and if there are any example settings, erase them.</p>
 <div class="highlight"><pre>#/etc/dhcpd.conf
 
 option domain-name-servers 8.8.8.8, 8.8.4.4;
